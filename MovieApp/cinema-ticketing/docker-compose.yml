@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:test-password@postgres:5432/cinema_db
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: cinema_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test-password
+    ports:
+      - "5432:5432"
