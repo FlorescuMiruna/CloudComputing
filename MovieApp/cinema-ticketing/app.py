@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 import psycopg2
 from psycopg2 import sql
 
@@ -88,7 +88,35 @@ def get_movies():
     return render_template('movies.html', movies=movies)
 
 
+# POST: Pentru a adăuga un film nou
+@app.route('/movies', methods=['POST'])
+def post_movie():
+    # Obține datele trimise din formularul HTML
+    new_movie = request.form
 
+    # Extrage valorile
+    title = new_movie['title']
+    director = new_movie['director']
+    year = new_movie['year']
+
+    # Creează o conexiune la baza de date și execută interogarea
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO movies (title, director, year) VALUES (%s, %s, %s) RETURNING id;",
+        (title, director, year)
+    )
+    new_movie_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"id": new_movie_id, "title": title, "director": director, "year": year}), 201
+
+
+@app.route('/add_movie')
+def add_movie():
+    return render_template('add_movie.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
