@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaugă o proiecție</title>
+</head>
+<body>
+    <h1>Adaugă o proiecție</h1>
+
+    <form action="/broadcast" method="POST">
+        <label for="movie_id">Alege un Film:</label>
+        <select id="movie_id" name="movie_id" required>
+            <option value="" disabled selected>-- Alege un Film --</option>
+            {% for movie in movies %}
+                <option value="{{ movie[0] }}">{{ movie[1] }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <label for="cinema_id">Alege un Cinema:</label>
+        <select id="cinema_id" name="cinema_id" required>
+            <option value="" disabled selected>-- Alege un Cinema --</option>
+            {% for cinema in cinemas %}
+                <option value="{{ cinema[0] }}">{{ cinema[1] }} - {{ cinema[2] }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <button type="submit">Adaugă la Cinema</button>
+    </form>
+
+    <br>
+    <a href="/broadcasts">Vezi toate proiecțiile</a>
+</body>
+</html>

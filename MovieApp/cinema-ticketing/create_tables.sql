@@ -5,6 +5,14 @@ CREATE TABLE IF NOT EXISTS movies (
     year INT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS broadcast (
+    movie_id SERIAL NOT NULL,
+    cinema_id SERIAL NOT NULL,
+    PRIMARY KEY (movie_id, cinema_id),
+    FOREIGN KEY (movie_id) REFERENCES movies (id) ON DELETE CASCADE,
+    FOREIGN KEY (cinema_id) REFERENCES cinemas (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS cinemas (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -22,10 +30,14 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 
 
-INSERT INTO movies (title, director, year)
-VALUES ('The Shawshank Redemption', 'Frank Darabont', 1994),
-       ('The Dark Knight', 'Christopher Nolan', 2008);
+INSERT INTO movies (id, title, director, year)
+VALUES (1, 'The Shawshank Redemption', 'Frank Darabont', 1994),
+       (2, 'The Dark Knight', 'Christopher Nolan', 2008);
 
-INSERT INTO cinemas (name, city, seat_number)
-VALUES ('Cinema City PSC Ploiesti', 'Ploiesti', 150),
-        ('Cinema City Afi Ploiesti', 'Ploiesti', 100);
+INSERT INTO cinemas (id, name, city, seat_number)
+VALUES (1, 'Cinema City PSC Ploiesti', 'Ploiesti', 150),
+       (2, 'Cinema City Afi Ploiesti', 'Ploiesti', 100);
+
+INSERT INTO broadcast (movie_id, cinema_id)
+VALUES (1, 1),
+       (2, 2);

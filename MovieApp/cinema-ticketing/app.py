@@ -25,20 +25,32 @@ def init_db():
         city VARCHAR(255) NOT NULL,
         seat_number INT NOT NULL
     );
+    
+    CREATE TABLE IF NOT EXISTS broadcast (
+        movie_id SERIAL NOT NULL,
+        cinema_id SERIAL NOT NULL,
+        PRIMARY KEY (movie_id, cinema_id),
+        FOREIGN KEY (movie_id) REFERENCES movies (id) ON DELETE CASCADE,
+        FOREIGN KEY (cinema_id) REFERENCES cinemas (id) ON DELETE CASCADE
+    );
     """
 
     # SQL pentru a adăuga datele inițiale
     insert_data_sql = """
-    INSERT INTO movies (title, director, year)
+    INSERT INTO movies (id, title, director, year)
     VALUES 
-        ('The Shawshank Redemption', 'Frank Darabont', 1994),
-        ('The Dark Knight', 'Christopher Nolan', 2008)
+        (1, 'The Shawshank Redemption', 'Frank Darabont', 1994),
+        (2, 'The Dark Knight', 'Christopher Nolan', 2008)
     ON CONFLICT (title) DO NOTHING;
     
-    INSERT INTO cinemas (name, city, seat_number)
+    INSERT INTO cinemas (id, name, city, seat_number)
     VALUES 
-        ('Cinema City PSC Ploiesti', 'Ploiesti', 150),
-        ('Cinema City Afi Ploiesti', 'Ploiesti', 100);
+        (1, 'Cinema City PSC Ploiesti', 'Ploiesti', 150),
+        (2, 'Cinema City Afi Ploiesti', 'Ploiesti', 100);
+        
+    INSERT INTO broadcast (movie_id, cinema_id)
+    VALUES (1, 1),
+           (2, 2);
     """
 
     # Executăm crearea tabelei și adăugarea datelor
@@ -135,7 +147,7 @@ def add_movie():
 def get_cinemas():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM cinemas;")  # Fetch all cinemas
+    cur.execute("SELECT * FROM cinemas;")
     cinemas = cur.fetchall()
     cur.close()
     conn.close()
@@ -144,15 +156,15 @@ def get_cinemas():
 # POST: Pentru a adauga un cinema nou
 @app.route('/cinemas', methods=['POST'])
 def post_cinema():
-    # Get data from the submitted form
+    # Obține datele trimise din formularul HTML
     new_cinema = request.form
 
-    # Extract values
+    # Extrage valorile
     name = new_cinema['name']
     city = new_cinema['city']
     seat_number = new_cinema['seat_number']
 
-    # Connect to the database and insert the new cinema
+    # Creează o conexiune la baza de date și execută insert ul
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -166,10 +178,93 @@ def post_cinema():
 
     return jsonify({"id": new_cinema_id, "name": name, "city": city, "seat_number": seat_number}), 201
 
-# GET: Render the form for adding a new cinema
 @app.route('/add_cinema')
 def add_cinema():
     return render_template('add_cinema.html')
+
+# POST: Pentru a adauga o noua proiectie
+@app.route('/broadcast', methods=['POST'])
+def post_broadcast():
+    # Obține datele trimise din formularul HTML
+    new_broadcast = request.form
+
+    # Extrage valorile
+    movie_id = new_broadcast['movie_id']
+    cinema_id = new_broadcast['cinema_id']
+
+    # Creează o conexiune la baza de date și execută insert ul
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO broadcast (movie_id, cinema_id) VALUES (%s, %s) RETURNING movie_id, cinema_id;",
+        (movie_id, cinema_id)
+    )
+
+    inserted_movie_id, inserted_cinema_id = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({
+        "movie_id": inserted_movie_id,
+        "cinema_id": inserted_cinema_id
+    }), 201
+
+
+@app.route('/add_broadcast')
+def add_broadcast():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM movies;")
+    movies = cur.fetchall()
+
+    cur.execute("SELECT * FROM cinemas;")
+    cinemas = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template('add_broadcast.html', movies=movies, cinemas=cinemas)
+
+# GET: Pentru a obține toate proiectiile
+@app.route('/broadcasts', methods=['GET'])
+def get_broadcasts():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT cinemas.id, cinemas.name, cinemas.city, movies.title 
+        FROM cinemas
+        JOIN broadcast ON cinemas.id = broadcast.cinema_id
+        JOIN movies ON broadcast.movie_id = movies.id
+        ORDER BY cinemas.name, movies.title;
+    """)
+
+    broadcasts = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    cinemas_movies = {}
+    for broadcast in broadcasts:
+        cinema_id = broadcast[0]
+        cinema_name = broadcast[1]
+        cinema_city = broadcast[2]
+        movie_title = broadcast[3]
+
+        # Grupam filmele dupa cinema
+        if cinema_id not in cinemas_movies:
+            cinemas_movies[cinema_id] = {
+                'name': cinema_name,
+                'city': cinema_city,
+                'movies': []
+            }
+
+        cinemas_movies[cinema_id]['movies'].append(movie_title)
+
+    return render_template('broadcasts.html', cinemas_movies=cinemas_movies)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
