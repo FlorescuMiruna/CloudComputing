@@ -18,6 +18,13 @@ def init_db():
         director VARCHAR(255) NOT NULL,
         year INT NOT NULL
     );
+    
+    CREATE TABLE IF NOT EXISTS cinemas (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        city VARCHAR(255) NOT NULL,
+        seat_number INT NOT NULL
+    );
     """
 
     # SQL pentru a adăuga datele inițiale
@@ -27,6 +34,11 @@ def init_db():
         ('The Shawshank Redemption', 'Frank Darabont', 1994),
         ('The Dark Knight', 'Christopher Nolan', 2008)
     ON CONFLICT (title) DO NOTHING;
+    
+    INSERT INTO cinemas (name, city, seat_number)
+    VALUES 
+        ('Cinema City PSC Ploiesti', 'Ploiesti', 150),
+        ('Cinema City Afi Ploiesti', 'Ploiesti', 100);
     """
 
     # Executăm crearea tabelei și adăugarea datelor
@@ -117,6 +129,47 @@ def post_movie():
 @app.route('/add_movie')
 def add_movie():
     return render_template('add_movie.html')
+
+# GET: Pentru a obtine toate cinema-urile
+@app.route('/cinemas')
+def get_cinemas():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM cinemas;")  # Fetch all cinemas
+    cinemas = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('cinemas.html', cinemas=cinemas)
+
+# POST: Pentru a adauga un cinema nou
+@app.route('/cinemas', methods=['POST'])
+def post_cinema():
+    # Get data from the submitted form
+    new_cinema = request.form
+
+    # Extract values
+    name = new_cinema['name']
+    city = new_cinema['city']
+    seat_number = new_cinema['seat_number']
+
+    # Connect to the database and insert the new cinema
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO cinemas (name, city, seat_number) VALUES (%s, %s, %s) RETURNING id;",
+        (name, city, seat_number)
+    )
+    new_cinema_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"id": new_cinema_id, "name": name, "city": city, "seat_number": seat_number}), 201
+
+# GET: Render the form for adding a new cinema
+@app.route('/add_cinema')
+def add_cinema():
+    return render_template('add_cinema.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
