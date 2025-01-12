@@ -4,12 +4,50 @@ from psycopg2 import sql
 
 app = Flask(__name__)
 
+
+# Funcție pentru a crea tabelele și a adăuga datele inițiale
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # SQL pentru crearea tabelelor
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS movies (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL UNIQUE,
+        director VARCHAR(255) NOT NULL,
+        year INT NOT NULL
+    );
+    """
+
+    # SQL pentru a adăuga datele inițiale
+    insert_data_sql = """
+    INSERT INTO movies (title, director, year)
+    VALUES 
+        ('The Shawshank Redemption', 'Frank Darabont', 1994),
+        ('The Dark Knight', 'Christopher Nolan', 2008)
+    ON CONFLICT (title) DO NOTHING;
+    """
+
+    # Executăm crearea tabelei și adăugarea datelor
+    cur.execute(create_table_sql)
+    cur.execute(insert_data_sql)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# Apelăm funcția de inițializare a bazei de date când aplicația pornește
+# @app.before_first_request
+# def before_first_request():
+#     init_db()
+
 @app.route('/')
 def hello_world():
     return "Hello, Cinema Ticketing App!"
 
 @app.route('/test_db')
 def test_db():
+    init_db()
     try:
         conn = get_db_connection()
         conn.close()

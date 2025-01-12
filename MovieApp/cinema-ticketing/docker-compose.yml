@@ -1,11 +1,18 @@
+version: '3.8'
+
 services:
   app:
     build: .
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgres://postgres:test-password@postgres:5432/cinema_db
-  postgres:
+      - DATABASE_URL=postgres://postgres:test-password@postgres-db:5432/cinema_db
+    depends_on:
+      - postgres-db
+    networks:
+      - cinema-network
+
+  postgres-db:
     image: postgres
     environment:
       POSTGRES_DB: cinema_db
@@ -13,3 +20,11 @@ services:
       POSTGRES_PASSWORD: test-password
     ports:
       - "5432:5432"
+    networks:
+      - cinema-network
+    volumes:
+      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
+
+networks:
+  cinema-network:
+    driver: bridge
