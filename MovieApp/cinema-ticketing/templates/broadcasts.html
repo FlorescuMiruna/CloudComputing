@@ -29,7 +29,7 @@
                     <h2>{{ cinema.name }} ({{ cinema.city }})</h2>
                     <ul>
                         {% for movie in cinema.movies %}
-                            <li>{{ movie }}</li>
+                            <li>{{ movie.title }} - {{ movie.date }}</li>
                         {% endfor %}
                     </ul>
                 </div>
