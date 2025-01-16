@@ -115,7 +115,7 @@ def init_db():
 
 @app.route('/')
 def hello_world():
-    return "Hello, Cinema Ticketing App!"
+    return "Hello, Cinema Ticketing Appp!"
 
 @app.route('/test_db')
 def test_db():
