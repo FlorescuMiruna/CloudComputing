@@ -5,6 +5,13 @@ CREATE TABLE IF NOT EXISTS movies (
     year INT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS cinemas (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    seat_number INT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS broadcast (
     movie_id SERIAL NOT NULL,
     cinema_id SERIAL NOT NULL,
@@ -14,21 +21,14 @@ CREATE TABLE IF NOT EXISTS broadcast (
     FOREIGN KEY (cinema_id) REFERENCES cinemas (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS cinemas (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL,
-    seat_number INT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS employees (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    salary INT NOT NULL,
-    loyalty_points INT NOT NULL,
-    FOREIGN KEY (id_cinema) REFERENCES cinema (id) ON DELETE CASCADE ON UPDATE CASCADE
-);
+-- CREATE TABLE IF NOT EXISTS employees (
+--     id SERIAL PRIMARY KEY,
+--     name VARCHAR(255) NOT NULL,
+--     email VARCHAR(255) NOT NULL,
+--     salary INT NOT NULL,
+--     loyalty_points INT NOT NULL,
+--     FOREIGN KEY (id_cinema) REFERENCES cinemas (id) ON DELETE CASCADE ON UPDATE CASCADE
+-- );
 
 CREATE TABLE IF NOT EXISTS clients (
     id SERIAL PRIMARY KEY,

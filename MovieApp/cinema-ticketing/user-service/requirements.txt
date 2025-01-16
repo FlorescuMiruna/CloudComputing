@@ -1,0 +1,7 @@
+Flask
+Flask-JWT-Extended
+Flask-SQLAlchemy
+psycopg2-binary
+bcrypt
+Flask-Migrate
+gunicorn==20.1.0

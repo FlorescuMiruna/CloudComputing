@@ -1,16 +1,28 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    ports:
-      - "5000:5000"
-    environment:
-      - DATABASE_URL=postgres://postgres:test-password@postgres-db:5432/cinema_db
-    depends_on:
-      - postgres-db
+#  app:
+#    build: .
+#    ports:
+#      - "5000:5000"
+#    environment:
+#      - DATABASE_URL=postgres://postgres:test-password@postgres-db:5432/cinema_db
+#    depends_on:
+#      - postgres-db
+#    networks:
+#      - cinema-network
+
+  syslog-ng:
+    image: balabit/syslog-ng:latest
+    container_name: syslog-ng
     networks:
       - cinema-network
+    ports:
+      - "514:514/udp"
+      - "514:514/tcp"
+    volumes:
+      - ./syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+      - ./logs:/var/log
 
   postgres-db:
     image: postgres
@@ -19,11 +31,46 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test-password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - cinema-network
     volumes:
       - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
+
+  postgres-db2:
+    image: postgres
+    container_name: user_db_cinema
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test-password
+
+    ports:
+      - "5431:5432"
+    networks:
+      - cinema-network
+    volumes:
+#      - ./user-service/data:/var/lib/postgresql/data
+      - ./user-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
+#      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
+
+  user-microservices:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: cinema-user-app
+    networks:
+      - cinema-network
+    ports:
+      - "5002:8000"
+    environment:
+      DB_HOST: user_db_cinema
+      DB_NAME: user_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: test-password
+    depends_on:
+      - postgres-db2 #nume serviciu
+    restart: always
 
 networks:
   cinema-network:
