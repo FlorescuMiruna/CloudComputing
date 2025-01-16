@@ -1,20 +1,15 @@
-# Dockerfile pentru cinema-service
-FROM python:3.9-slim
-
-# Setăm directorul de lucru
+FROM python:slim
 WORKDIR /app
 
-# Copiem fișierele necesare în container
-COPY requirements.txt /app/
+# Actualizare și instalare PostgreSQL client
+RUN apt update && apt install -y postgresql-client
 
-# Instalăm dependențele
-RUN pip install --no-cache-dir -r requirements.txt
+# Copiere și instalare dependențe
+COPY requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
 
-# Copiem aplicația în container
-COPY . /app/
+# Copierea codului aplicației în container
+COPY . .
 
-# Setăm portul pe care rulează aplicația
-EXPOSE 5000
-
-# Comanda de rulare a aplicației
-CMD ["python", "app.py"]
+# Pornirea aplicației folosind Gunicorn
+ENTRYPOINT ["gunicorn", "app:app", "--bind", "0.0.0.0:8000"]

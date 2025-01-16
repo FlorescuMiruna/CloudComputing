@@ -1,6 +1,8 @@
-flask
+Flask
+Flask-JWT-Extended
+Flask-SQLAlchemy
 psycopg2-binary
-flask-sqlalchemy
-flask-jwt-extended
-flask-migrate
-werkzeug
+bcrypt
+Flask-Migrate
+gunicorn==20.1.0
+requests

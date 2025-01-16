@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # User service (microservice pentru gestionarea utilizatorilor)
+  # User service (microserviciu pentru gestionarea utilizatorilor)
   user-microservices:
     build:
       context: ./user-service
@@ -20,18 +20,18 @@ services:
       - postgres-db2
     restart: always
 
-  # Cinema service (microservice pentru gestionarea cinematografelor și filmelor)
-  cinema-service:
+  # Cinema service (microserviciu pentru gestionarea cinematografelor și filmelor)
+  cinema-microservices:
     build:
       context: ./cinema-service
       dockerfile: Dockerfile
-    container_name: cinema-app
+    container_name: cinema-cinema-app
     networks:
       - cinema-network
     ports:
-      - "5000:5000"
+      - "5000:8000"
     environment:
-      DB_HOST: postgres-db
+      DB_HOST: cinema_db_cinema
       DB_NAME: cinema_db
       DB_USERNAME: postgres
       DB_PASSWORD: test-password
@@ -41,6 +41,7 @@ services:
     volumes:
       - ./cinema-service:/app
 
+  # Ticketing service (microserviciu pentru gestionarea biletelor)
   ticketing-microservices:
     build:
       context: ./ticketing-service
@@ -56,7 +57,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: test-password
     depends_on:
-      - postgres-db3 #nume serviciu
+      - postgres-db3
     restart: always
 
   # Syslog-ng pentru logare centralizată
@@ -75,6 +76,7 @@ services:
   # PostgreSQL pentru cinema service
   postgres-db:
     image: postgres
+    container_name: cinema_db_cinema
     environment:
       POSTGRES_DB: cinema_db
       POSTGRES_USER: postgres
@@ -101,6 +103,7 @@ services:
     volumes:
       - ./user-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
+  # PostgreSQL pentru ticketing service
   postgres-db3:
     image: postgres
     container_name: ticket_db_cinema
@@ -108,7 +111,6 @@ services:
       POSTGRES_DB: ticket_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: test-password
-
     ports:
       - "5434:5432"
     networks:

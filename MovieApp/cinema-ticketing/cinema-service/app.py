@@ -6,15 +6,36 @@ from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from flask import session
 
+
+from flask import Flask, request, jsonify, render_template, flash, redirect, url_for
+from functools import wraps
+import jwt
+
+
+
 from functools import wraps
 
-app = Flask(__name__)
+# app = Flask(__name__)
 
 # session configuration
+# app.secret_key = 'flask_secret_key'
+# app.config['SESSION_PERMANENT'] = False
+# app.config['SESSION_TYPE'] = 'filesystem'
+
+SECRET_KEY = 'your-secret-key'
+
+USER_SERVICE_URL = "http://cinema-microservices:8000"
+
+app = Flask(__name__)
 app.secret_key = 'flask_secret_key'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test-password@ticket_db_cinema:5432/ticket_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'my_secret_key'
+
+# db.init_app(app)
 
 # Funcție pentru a crea tabelele și a adăuga datele inițiale
 def init_db():
