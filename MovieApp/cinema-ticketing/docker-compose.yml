@@ -41,6 +41,24 @@ services:
     volumes:
       - ./cinema-service:/app
 
+  ticketing-microservices:
+    build:
+      context: ./ticketing-service
+      dockerfile: Dockerfile
+    container_name: cinema-ticketing-app
+    networks:
+      - cinema-network
+    ports:
+      - "5003:8000"
+    environment:
+      DB_HOST: ticket_db_cinema
+      DB_NAME: ticket_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: test-password
+    depends_on:
+      - postgres-db3 #nume serviciu
+    restart: always
+
   # Syslog-ng pentru logare centralizată
   syslog-ng:
     image: balabit/syslog-ng:latest
@@ -82,6 +100,21 @@ services:
       - cinema-network
     volumes:
       - ./user-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  postgres-db3:
+    image: postgres
+    container_name: ticket_db_cinema
+    environment:
+      POSTGRES_DB: ticket_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test-password
+
+    ports:
+      - "5434:5432"
+    networks:
+      - cinema-network
+    volumes:
+      - ./ticketing-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
 networks:
   cinema-network:

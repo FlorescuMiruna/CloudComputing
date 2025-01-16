@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -8,6 +8,8 @@ from flask import Blueprint, request, jsonify, render_template, session, redirec
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from models import db, Client
+import jwt
+import datetime
 
 app = Flask(__name__)
 
@@ -20,6 +22,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test-password@use
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 
+
+
 # db = SQLAlchemy(app)
 db.init_app(app)
 jwt = JWTManager(app)
@@ -30,6 +34,45 @@ migrate = Migrate(app, db)
 
 # app = Flask(__name__)
 # app.register_blueprint(userRoutes)
+
+SECRET_KEY = 'your-secret-key'
+
+def generate_token(client_id):
+    """Generate a JWT token."""
+    payload = {
+        'client_id': client_id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)  # Token expiry (1 day)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    return token
+
+
+from functools import wraps
+from flask import request, jsonify
+import jwt
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.cookies.get('access_token')  # Fetch the token from the cookie
+
+        if not token:
+            return jsonify({'message': 'Token is missing!'}), 401
+
+        try:
+            # Verify the token (assuming you're using 'secret_key' to encode/decode)
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            request.client_id = data['client_id']  # Attach the client_id to the request object
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired!'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Invalid token!'}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 
 def login_required(f):
     @wraps(f)
@@ -71,18 +114,57 @@ def login():
         user = Client.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password_hash, password):
-            session['user_id'] = user.id
-            return jsonify({"message": "Logare cu succes!"}), 200
+            token = generate_token(user.id)
+            response = make_response(jsonify({"message": "Logare cu succes!", "token" : token }), 200)
+            response.set_cookie('access_token', token, httponly=True, secure=True, samesite='Strict')  # set cookie
+            return response
         else:
             return jsonify({"error": "Username sau parolă invalidă"}), 401
 
     return render_template('login.html')
 
 # Route: Logout
-@app.route('/logout')
+@app.route('/logout', methods=['POST'])
+@token_required  # Ensure the user is authenticated (assuming you have a decorator to verify the token)
 def logout():
-    session.clear()  # Clear the session
-    return redirect(url_for('login'))
+    # Remove the JWT token from the response (client-side)
+    response = jsonify({"message": "Logged out successfully"})
+
+    # Remove JWT token from cookies
+    response.set_cookie('access_token', '', expires=0)  # Expire the token cookie immediately
+
+    return response
+
+@app.route('/profile', methods=['GET'])
+@token_required  # Ensure the user is authenticated (assuming you have a decorator to verify the token)
+def profile():
+    return render_template('logout.html')
+
+# Endpoint to check if a user exists by ID
+@app.route('/users/<int:client_id>', methods=['GET'])
+def check_user_by_id(client_id):
+    # Query the database for the user by client_id
+    user = Client.query.get(client_id)
+
+    # If user exists, return user details
+    if user:
+        return jsonify({
+            'client_id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'created_at': user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }), 200  # HTTP status code 200 for OK
+    else:
+        return jsonify({'error': 'User not found'}), 404  # HTTP status code 404 for Not Found
+
+
+@app.route('/clients/<int:client_id>', methods=['GET'])
+def get_client(client_id):
+    client = Client.query.get(client_id)
+    if client:
+        return jsonify(client)
+    else:
+        return jsonify({'error': 'Client not found'}), 404
 
 
 
