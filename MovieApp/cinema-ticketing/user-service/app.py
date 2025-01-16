@@ -138,7 +138,9 @@ def logout():
 @app.route('/profile', methods=['GET'])
 @token_required  # Ensure the user is authenticated (assuming you have a decorator to verify the token)
 def profile():
-    return render_template('logout.html')
+    client_id = request.client_id
+    client = Client.query.filter_by(id=client_id).first();
+    return render_template('profile.html', client=client)
 
 # Endpoint to check if a user exists by ID
 @app.route('/users/<int:client_id>', methods=['GET'])

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 50px;
+        }
+        .logout-container {
+            width: 40%;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .logout-container h1 {
+            margin-bottom: 20px;
+        }
+        .logout-container p {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #6c757d;
+        }
+        .logout-container .client-info {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #495057;
+        }
+        .logout-container button {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .logout-container button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <h1>Bine ați venit!</h1>
+
+        <!-- Display client information dynamically -->
+        <div class="client-info">
+            <p><strong>Username:</strong> {{ client.username }}</p>
+            <p><strong>Email:</strong> {{ client.email }}</p>
+        </div>
+
+        <p>Sunteți logat. Apăsați aici pentru a vă deloga.</p>
+
+        <!-- Logout Form with a POST Method -->
+        <form action="/logout" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</body>
+</html>
