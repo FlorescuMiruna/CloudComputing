@@ -1,59 +1,7 @@
 version: '3.8'
 
 services:
-#  app:
-#    build: .
-#    ports:
-#      - "5000:5000"
-#    environment:
-#      - DATABASE_URL=postgres://postgres:test-password@postgres-db:5432/cinema_db
-#    depends_on:
-#      - postgres-db
-#    networks:
-#      - cinema-network
-
-  syslog-ng:
-    image: balabit/syslog-ng:latest
-    container_name: syslog-ng
-    networks:
-      - cinema-network
-    ports:
-      - "514:514/udp"
-      - "514:514/tcp"
-    volumes:
-      - ./syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-      - ./logs:/var/log
-
-  postgres-db:
-    image: postgres
-    environment:
-      POSTGRES_DB: cinema_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: test-password
-    ports:
-      - "5433:5432"
-    networks:
-      - cinema-network
-    volumes:
-      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
-
-  postgres-db2:
-    image: postgres
-    container_name: user_db_cinema
-    environment:
-      POSTGRES_DB: user_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: test-password
-
-    ports:
-      - "5431:5432"
-    networks:
-      - cinema-network
-    volumes:
-#      - ./user-service/data:/var/lib/postgresql/data
-      - ./user-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
-#      - ./create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql  # Montăm fișierul SQL în directorul corespunzător
-
+  # User service (microservice pentru gestionarea utilizatorilor)
   user-microservices:
     build:
       context: ./user-service
@@ -69,8 +17,71 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: test-password
     depends_on:
-      - postgres-db2 #nume serviciu
+      - postgres-db2
     restart: always
+
+  # Cinema service (microservice pentru gestionarea cinematografelor și filmelor)
+  cinema-service:
+    build:
+      context: ./cinema-service
+      dockerfile: Dockerfile
+    container_name: cinema-app
+    networks:
+      - cinema-network
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: postgres-db
+      DB_NAME: cinema_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: test-password
+    depends_on:
+      - postgres-db
+    restart: always
+    volumes:
+      - ./cinema-service:/app
+
+  # Syslog-ng pentru logare centralizată
+  syslog-ng:
+    image: balabit/syslog-ng:latest
+    container_name: syslog-ng
+    networks:
+      - cinema-network
+    ports:
+      - "514:514/udp"
+      - "514:514/tcp"
+    volumes:
+      - ./syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+      - ./logs:/var/log
+
+  # PostgreSQL pentru cinema service
+  postgres-db:
+    image: postgres
+    environment:
+      POSTGRES_DB: cinema_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test-password
+    ports:
+      - "5433:5432"
+    networks:
+      - cinema-network
+    volumes:
+      - ./cinema-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  # PostgreSQL pentru user service
+  postgres-db2:
+    image: postgres
+    container_name: user_db_cinema
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test-password
+    ports:
+      - "5431:5432"
+    networks:
+      - cinema-network
+    volumes:
+      - ./user-service/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
 networks:
   cinema-network:

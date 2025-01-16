@@ -1,20 +1,17 @@
-# Alegem imaginea de bază Python
+# Folosește o imagine de bază Python
 FROM python:3.9-slim
 
-# Setăm directorul de lucru în container
+# Setează directorul de lucru
 WORKDIR /app
 
-# Copiem requirements.txt în container
-COPY requirements.txt .
+# Copiază fișierele necesare
+COPY . /app
 
-# Instalăm dependențele
-RUN pip install -r requirements.txt
+# Instalează dependențele
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiem aplicația Flask în container
-COPY . .
-
-# Expunem portul 5000 pentru aplicație
+# Expune portul 5000
 EXPOSE 5000
 
-# Comanda pentru a porni aplicația Flask
+# Comanda pentru a rula aplicația Flask
 CMD ["python", "app.py"]
