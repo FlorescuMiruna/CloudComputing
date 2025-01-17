@@ -9,6 +9,7 @@ from models import Ticket
 SECRET_KEY = 'your-secret-key'
 
 USER_SERVICE_URL = "http://user-microservices:8000"
+CINEMA_SERVICE_URL = "http://cinema-microservices:8000"
 
 app = Flask(__name__)
 app.secret_key = 'flask_secret_key'
@@ -51,33 +52,104 @@ def verify_user_exists(client_id):
     return False
 
 
+# @app.route('/book_ticket', methods=['GET', 'POST'])
+# @token_required
+# def book_ticket():
+#     if request.method == 'POST':
+#         movie_id = request.form.get('movie_id')
+#         cinema_id = request.form.get('cinema_id')
+#         seat_nr = request.form.get('seat_nr')
+#
+#         user_id = request.client_id
+#
+#         if not verify_user_exists(user_id):
+#             flash('Clientul din token nu a putut fi găsit!.', 'danger')
+#             return redirect(url_for('login'))
+#
+#         existing_ticket = Ticket.query.filter_by(movie_id=movie_id, cinema_id=cinema_id, seat_nr=seat_nr).first()
+#
+#         if existing_ticket:
+#             flash('Acest loc este deja rezervat! Vă rugăm alegeți altul.', 'danger')
+#         else:
+#             new_ticket = Ticket(client_id=user_id, movie_id=movie_id, cinema_id=cinema_id, seat_nr=seat_nr)
+#             db.session.add(new_ticket)
+#             db.session.commit()
+#             flash('Bilet rezervat cu succes!', 'success')
+#
+#             return redirect(url_for('view_tickets'))
+#
+#     return render_template('book_ticket.html')
+
 @app.route('/book_ticket', methods=['GET', 'POST'])
 @token_required
 def book_ticket():
     if request.method == 'POST':
+        # Retrieve data from the form
         movie_id = request.form.get('movie_id')
         cinema_id = request.form.get('cinema_id')
         seat_nr = request.form.get('seat_nr')
 
-        user_id = request.client_id
-
-        if not verify_user_exists(user_id):
-            flash('Clientul din token nu a putut fi găsit!.', 'danger')
-            return redirect(url_for('login'))
-
-        existing_ticket = Ticket.query.filter_by(movie_id=movie_id, cinema_id=cinema_id, seat_nr=seat_nr).first()
+        # Verify if the seat is already booked
+        existing_ticket = Ticket.query.filter_by(
+            movie_id=movie_id,
+            cinema_id=cinema_id,
+            seat_nr=seat_nr
+        ).first()
 
         if existing_ticket:
             flash('Acest loc este deja rezervat! Vă rugăm alegeți altul.', 'danger')
         else:
-            new_ticket = Ticket(client_id=user_id, movie_id=movie_id, cinema_id=cinema_id, seat_nr=seat_nr)
+            # Add a new ticket to the database
+            new_ticket = Ticket(
+                client_id=request.client_id,  # Assuming the user's ID is stored in the session
+                movie_id=movie_id,
+                cinema_id=cinema_id,
+                seat_nr=seat_nr
+            )
             db.session.add(new_ticket)
             db.session.commit()
-            flash('Bilet rezervat cu succes!', 'success')
 
+            flash('Bilet rezervat cu succes!', 'success')
             return redirect(url_for('view_tickets'))
 
-    return render_template('book_ticket.html')
+    # Fetch movies from the cinema microservice
+    try:
+        response = requests.get(f"{CINEMA_SERVICE_URL}/get_movies")
+        response.raise_for_status()
+        movies = response.json()
+    # except requests.RequestException:
+    #     flash('Eroare la conectarea cu serviciul de cinematograf.', 'danger')
+    #     movies = []
+    except requests.exceptions.ConnectionError:
+        print("Failed to connect to the cinema service.")
+        return {"error": "Failed to connect to the cinema service."}
+    except requests.exceptions.Timeout:
+        print("The request to the cinema service timed out.")
+        return {"error": "The request to the cinema service timed out."}
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+        return {"error": f"HTTP error occurred: {e}"}
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return {"error": f"An unexpected error occurred: {e}"}
+
+    return render_template('book_ticket.html', movies=movies)
+
+@app.route('/cinemas_by_movie')
+def get_cinemas_for_movie():
+    movie_id = request.args.get('movie_id')
+    if not movie_id:
+        return jsonify([])
+
+    try:
+        response = requests.get(f"{CINEMA_SERVICE_URL}/cinemas_by_movie?movie_id={movie_id}")
+        response.raise_for_status()
+        cinemas = response.json()
+    except requests.RequestException:
+        return jsonify([])
+
+    return jsonify(cinemas)
+
 
 @app.route('/tickets')
 @token_required

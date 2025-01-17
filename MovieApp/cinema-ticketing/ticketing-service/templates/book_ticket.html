@@ -1,144 +1,3 @@
-{#<!DOCTYPE html>#}
-{#<html lang="en">#}
-{#<head>#}
-{#    <meta charset="UTF-8">#}
-{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
-{#    <title>Rezervă un bilet</title>#}
-{#    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">#}
-{#    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>#}
-{#    <script>#}
-{#    // Function to load cinemas for the selected movie#}
-{#    function loadCinemas(movieId) {#}
-{#        // Empty the cinema dropdown first#}
-{#        $('#cinema').empty();#}
-{#        $('#cinema').append('<option value="">Alege cinematograful</option>');  // Add a default "Select Cinema" option#}
-{##}
-{#        // Get the JWT token from localStorage#}
-{#        const token = localStorage.getItem('jwt_token');#}
-{##}
-{#        if (movieId) {#}
-{#            $.ajax({#}
-{#                url: '/get_cinemas_for_movie',#}
-{#                method: 'GET',#}
-{#                headers: {#}
-{#                    'Authorization': 'Bearer ' + token  // Include the JWT token in the header#}
-{#                },#}
-{#                data: { movie_id: movieId },#}
-{#                success: function(cinemas) {#}
-{#                    // Populate the cinema dropdown with the cinemas returned by the server#}
-{#                    cinemas.forEach(function(cinema) {#}
-{#                        $('#cinema').append('<option value="' + cinema[0] + '">' + cinema[1] + '</option>');#}
-{#                    });#}
-{#                },#}
-{#                error: function() {#}
-{#                    alert('Could not load cinemas.');#}
-{#                }#}
-{#            });#}
-{#        }#}
-{#    }#}
-{#</script>#}
-{##}
-{#    <style>#}
-{#        body {#}
-{#            font-family: Arial, sans-serif;#}
-{#            background-color: #f8f9fa;#}
-{#            padding-top: 30px;#}
-{#        }#}
-{##}
-{#        .container {#}
-{#            width: 80%;#}
-{#            margin: auto;#}
-{#        }#}
-{##}
-{#        h1 {#}
-{#            text-align: center;#}
-{#            margin-bottom: 30px;#}
-{#        }#}
-{##}
-{#        form {#}
-{#            background-color: white;#}
-{#            padding: 20px;#}
-{#            border-radius: 8px;#}
-{#            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);#}
-{#        }#}
-{##}
-{#        label {#}
-{#            font-weight: bold;#}
-{#        }#}
-{##}
-{#        select, input {#}
-{#            width: 100%;#}
-{#            padding: 8px;#}
-{#            margin-bottom: 15px;#}
-{#            border-radius: 5px;#}
-{#            border: 1px solid #ddd;#}
-{#        }#}
-{##}
-{#        button {#}
-{#            background-color: #007bff;#}
-{#            color: white;#}
-{#            padding: 10px 20px;#}
-{#            border: none;#}
-{#            border-radius: 5px;#}
-{#            cursor: pointer;#}
-{#            font-size: 16px;#}
-{#        }#}
-{##}
-{#        button:hover {#}
-{#            background-color: #0056b3;#}
-{#        }#}
-{##}
-{#        .alert {#}
-{#            margin-bottom: 20px;#}
-{#        }#}
-{#    </style>#}
-{#</head>#}
-{#<body>#}
-{##}
-{#    <div class="container">#}
-{#        <h1>Rezervă un bilet</h1>#}
-{##}
-{#        <!-- Display flash messages -->#}
-{#        {% with messages = get_flashed_messages(with_categories=true) %}#}
-{#            {% if messages %}#}
-{#                <div class="alert alert-{{ messages[0][0] }}">#}
-{#                    {{ messages[0][1] }}#}
-{#                </div>#}
-{#            {% endif %}#}
-{#        {% endwith %}#}
-{##}
-{#        <form method="POST" action="/book_ticket">#}
-{#            <label for="movie">Alege filmul:</label>#}
-{#            <select id="movie" name="movie_id" onchange="loadCinemas(this.value)">#}
-{#                <option value="">Alege filmul:</option>#}
-{#                {% for movie in movies %}#}
-{#                    <option value="{{ movie[0] }}">{{ movie[1] }}</option>#}
-{#                {% endfor %}#}
-{#            </select><br><br>#}
-{##}
-{#            <label for="cinema">Alege cinematograful:</label>#}
-{#            <select id="cinema" name="cinema_id">#}
-{#                <option value="">Alege cinematograful</option>#}
-{#                <!-- Cinemas will be dynamically populated here -->#}
-{#            </select><br><br>#}
-{##}
-{#            <label for="seat_nr">Numar loc:</label>#}
-{#            <input type="text" id="seat_nr" name="seat_nr" required><br><br>#}
-{##}
-{#            <button type="submit">Rezervă biletul</button>#}
-{#        </form>#}
-{##}
-{#        <br>#}
-{##}
-{#        <a href="/tickets" class="btn btn-link">Mergi la Biletele Tale</a>#}
-{#    </div>#}
-{##}
-{#    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>#}
-{#    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>#}
-{##}
-{#</body>#}
-{#</html>#}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,67 +6,26 @@
     <title>Rezervă un bilet</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            padding-top: 30px;
-        }
+    <script>
+        // Function to load cinemas for the selected movie
+        function loadCinemas(movieId) {
+            $('#cinema').empty();
+            $('#cinema').append('<option value="">Alege cinematograful</option>');
 
-        .container {
-            width: 80%;
-            margin: auto;
+            if (movieId) {
+                $.get('/cinemas_by_movie', { movie_id: movieId }, function(cinemas) {
+                    cinemas.forEach(function(cinema) {
+                        $('#cinema').append('<option value="' + cinema.id + '">' + cinema.name + '</option>');
+                    });
+                });
+            }
         }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .alert {
-            margin-bottom: 20px;
-        }
-    </style>
+    </script>
 </head>
 <body>
-
     <div class="container">
         <h1>Rezervă un bilet</h1>
 
-        <!-- Display flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="alert alert-{{ messages[0][0] }}">
@@ -217,26 +35,28 @@
         {% endwith %}
 
         <form method="POST" action="/book_ticket">
-            <label for="movie_id">ID Film:</label>
-            <input type="number" id="movie_id" name="movie_id" required><br><br>
+            <label for="movie">Alege filmul:</label>
+            <select id="movie" name="movie_id" onchange="loadCinemas(this.value)">
+                <option value="">Alege filmul:</option>
+                {% for movie in movies %}
+                    <option value="{{ movie['id'] }}">{{ movie['title'] }}</option>
+                {% endfor %}
+            </select><br><br>
 
-            <label for="cinema_id">ID Cinematograf:</label>
-            <input type="number" id="cinema_id" name="cinema_id" required><br><br>
+            <label for="cinema">Alege cinematograful:</label>
+            <select id="cinema" name="cinema_id">
+                <option value="">Alege cinematograful</option>
+            </select><br><br>
 
             <label for="seat_nr">Număr loc:</label>
             <input type="text" id="seat_nr" name="seat_nr" required><br><br>
 
             <button type="submit">Rezervă biletul</button>
         </form>
-
         <br>
-
-        <a href="/tickets" class="btn btn-link">Mergi la Biletele Tale</a>
+        <a href="/view_tickets" class="btn btn-link">Mergi la Biletele Tale</a>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 </body>
 </html>
+
 

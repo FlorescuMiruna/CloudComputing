@@ -138,15 +138,15 @@ def init_db():
 def hello_world():
     return "Hello, Cinema Ticketing Appp!"
 
-@app.route('/test_db')
-def test_db():
-    init_db()
-    try:
-        conn = get_db_connection()
-        conn.close()
-        return "Database connection successful!"
-    except Exception as e:
-        return f"Database connection failed: {e}"
+# @app.route('/test_db')
+# def test_db():
+#     init_db()
+#     try:
+#         conn = get_db_connection()
+#         conn.close()
+#         return "Database connection successful!"
+#     except Exception as e:
+#         return f"Database connection failed: {e}"
 
 # Funcție pentru a obține conexiunea la baza de date
 def get_db_connection():
@@ -179,6 +179,30 @@ def get_movies():
     cur.close()
     conn.close()
     return render_template('movies.html', movies=movies)
+
+@app.route('/get_movies')
+def get_movies_for_ticketing():
+    # Connect to the database
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, title, director, year FROM movies;")  # Select relevant movie details
+    movies = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Check if the request is expecting JSON
+    # if request.headers.get('Accept') == 'application/json':
+        # Return data as JSON for external services
+    return jsonify([{
+        "id": movie[0],
+        "title": movie[1],
+        "director": movie[2],
+        "year": movie[3]
+    } for movie in movies])
+
+    # Otherwise, render the HTML template
+    # return render_template('movies.html', movies=movies)
+
 
 
 # POST: Pentru a adăuga un film nou
@@ -221,6 +245,43 @@ def get_cinemas():
     cur.close()
     conn.close()
     return render_template('cinemas.html', cinemas=cinemas)
+
+@app.route('/cinemas_by_movie', methods=['GET'])
+def cinemas_by_movie():
+    # Get the movie_id from query parameters
+    movie_id = request.args.get('movie_id')
+
+    if not movie_id:
+        return jsonify({"error": "movie_id is required"}), 400
+
+    # Connect to the database
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Query to find cinemas showing the movie
+    cur.execute(
+        """
+        SELECT DISTINCT c.id, c.name
+        FROM cinemas c
+        JOIN broadcast b ON c.id = b.cinema_id
+        WHERE b.movie_id = %s;
+        """,
+        (movie_id,)
+    )
+
+    # Fetch results
+    cinemas = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    if not cinemas:
+        return jsonify([]), 200  # Return empty list if no cinemas found
+
+    # Format results
+    cinema_list = [{"id": cinema[0], "name": cinema[1]} for cinema in cinemas]
+
+    return jsonify(cinema_list), 200
+
 
 # POST: Pentru a adauga un cinema nou
 @app.route('/cinemas', methods=['POST'])
